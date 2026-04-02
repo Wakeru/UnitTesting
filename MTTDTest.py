@@ -480,6 +480,87 @@ class TestFetchPassportRecord(unittest.TestCase):
         record = mock_fetch("TK987654")
         self.assertTrue(validate_date_of_birth(record["dob"]))
 
+# ===== ADDITIONAL TEST CASES TO KILL SURVIVING MUTANTS =====
+
+class TestAdditionalMutantKillers(unittest.TestCase):
+
+    # --- Missing nationality code coverage (mutants #34-51, #54-57) ---
+
+    def test_valid_gbd(self):
+        # Kills #34, #35: 'GBD' replaced — British Dependent Territories citizen
+        self.assertTrue(validate_nationality_code("GBD"))
+
+    def test_valid_gbn(self):
+        # Kills #36, #37: 'GBN' replaced — British National (Overseas)
+        self.assertTrue(validate_nationality_code("GBN"))
+
+    def test_valid_gbo(self):
+        # Kills #38, #39: 'GBO' replaced — British Overseas citizen
+        self.assertTrue(validate_nationality_code("GBO"))
+
+    def test_valid_gbs(self):
+        # Kills #40, #41: 'GBS' replaced — British Subject
+        self.assertTrue(validate_nationality_code("GBS"))
+
+    def test_valid_rks(self):
+        # Kills #42, #43: 'RKS' replaced — Kosovo
+        self.assertTrue(validate_nationality_code("RKS"))
+
+    def test_valid_eue(self):
+        # Kills #44, #45: 'EUE' replaced — European Union emergency travel document
+        self.assertTrue(validate_nationality_code("EUE"))
+
+    def test_valid_uno(self):
+        # Kills #46, #47: 'UNO' replaced — United Nations Organization laissez-passer
+        self.assertTrue(validate_nationality_code("UNO"))
+
+    def test_valid_una(self):
+        # Kills #48, #49: 'UNA' replaced — United Nations agency
+        self.assertTrue(validate_nationality_code("UNA"))
+
+    def test_valid_xba(self):
+        # Kills #50, #51: 'XBA' replaced — stateless document code
+        self.assertTrue(validate_nationality_code("XBA"))
+
+    def test_valid_xxb(self):
+        # Kills #54, #55: 'XXB' replaced — stateless persons (1954 Convention)
+        self.assertTrue(validate_nationality_code("XXB"))
+
+    def test_valid_xxc(self):
+        # Kills #56, #57: 'XXC' replaced — travel docs under other instruments
+        self.assertTrue(validate_nationality_code("XXC"))
+
+    # --- Alpha character value in check digit (mutant #1) ---
+
+    def test_check_digit_alpha_value(self):
+        # Kills #1: ord(char.upper()) - 55 mutated to + 55
+        # A = ord('A') - 55 = 65 - 55 = 10; with +55 it would be 120
+        # "A" alone: value=10, weight=7, total=70, 70%10=0
+        self.assertEqual(calculate_check_digit("A"), 0)
+        # "B" = 11 * 7 = 77, 77%10 = 7
+        self.assertEqual(calculate_check_digit("B"), 7)
+        # "Z" = 35 * 7 = 245, 245%10 = 5
+        self.assertEqual(calculate_check_digit("Z"), 5)
+
+    # --- Date-of-birth day slice (mutants #83, #123) ---
+
+    def test_dob_day_slice_boundary(self):
+        # Kills #83 (dob[4:6] -> dob[4:7]) and #123 (dob[4:6] -> dob[4:])
+        # Day=32 is invalid; a broken slice returns wrong day value and passes
+        self.assertFalse(validate_date_of_birth("990132"))
+
+    # --- Filler character '<' in check digit (mutants #94, #95, #119) ---
+
+    def test_check_digit_filler_char_is_specifically_angle_bracket(self):
+        # Kills #94 (char=='<' -> char=='mutpy'), #95 (char=='<' -> char==''),
+        # and #119 (char=='<' -> char!='<')
+        # '<' must specifically map to value=0 via its own branch
+        self.assertEqual(calculate_check_digit("<"), 0)
+        # Known ICAO example: "L898902C3" -> check digit 6
+        self.assertEqual(calculate_check_digit("L898902C3"), 6)
+        # MRZ with fillers: "<<<" should give 0
+        self.assertEqual(calculate_check_digit("<<<"), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
