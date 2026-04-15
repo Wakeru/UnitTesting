@@ -94,6 +94,23 @@ def calculate_check_digit(data: str) -> int:
 
     return total % 10
 
+def encode_record(record: dict) -> str:
+    """
+    Convert a decoded passport record into MRZ format (2 lines).
+    Returns: "LINE1;LINE2"
+    """
+
+    # Example simple format (you can adjust based on your assignment)
+    line1 = f"P<{record['country_code']}{record['last_name']}<<{record['first_name']}"
+    
+    line2 = (
+        f"{record['passport_number']}{record['country_code']}"
+        f"{record['birth_date']}{record['sex']}"
+        f"{record['expiration_date']}{record['personal_number']}"
+    )
+
+    return line1 + ";" + line2
+
 
 # Stub for hardware interaction
 def scan_passport():
