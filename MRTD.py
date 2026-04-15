@@ -96,20 +96,30 @@ def calculate_check_digit(data: str) -> int:
 
 def encode_record(record: dict) -> str:
     """
-    Convert a decoded passport record into MRZ format (2 lines).
-    Returns: "LINE1;LINE2"
+    Convert one decoded MRTD record into two MRZ-like lines separated by a semicolon.
     """
 
-    # Example simple format (you can adjust based on your assignment)
-    line1 = f"P<{record['country_code']}{record['last_name']}<<{record['first_name']}"
-    
-    line2 = (
-        f"{record['passport_number']}{record['country_code']}"
-        f"{record['birth_date']}{record['sex']}"
-        f"{record['expiration_date']}{record['personal_number']}"
+    line1_data = record["line1"]
+    line2_data = record["line2"]
+
+    issuing_country = line1_data["issuing_country"]
+    last_name = line1_data["last_name"].replace(" ", "<").upper()
+    given_name = line1_data["given_name"].replace(" ", "<").upper()
+
+    passport_number = line2_data["passport_number"]
+    country_code = line2_data["country_code"]
+    birth_date = line2_data["birth_date"]
+    sex = line2_data["sex"]
+    expiration_date = line2_data["expiration_date"]
+    personal_number = line2_data["personal_number"]
+
+    mrz_line1 = f"P<{issuing_country}{last_name}<<{given_name}"
+    mrz_line2 = (
+        f"{passport_number}{country_code}"
+        f"{birth_date}{sex}{expiration_date}{personal_number}"
     )
 
-    return line1 + ";" + line2
+    return mrz_line1 + ";" + mrz_line2
 
 
 # Stub for hardware interaction
